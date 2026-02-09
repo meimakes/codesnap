@@ -61,6 +61,9 @@ const syntaxColors = {
 
 // Token-based syntax highlighter (avoids regex overlap issues)
 function highlightCode(code, lang, themeName) {
+  if (lang === 'text' || lang === 'plain' || lang === 'plaintext') {
+    return code.split('\n').map(line => escapeHTML(line)).join('\n');
+  }
   const colors = syntaxColors[themeName];
   
   const keywords = new Set(['fn', 'let', 'mut', 'const', 'if', 'else', 'for', 'while', 'return', 'use', 'pub', 'struct', 'impl', 'enum', 'match', 'async', 'await', 'import', 'export', 'from', 'function', 'class', 'def', 'self', 'print', 'type', 'interface', 'where', 'trait', 'mod', 'crate', 'super', 'true', 'false', 'in', 'as', 'move', 'try', 'except', 'raise', 'with', 'yield', 'lambda', 'pass', 'break', 'continue']);
@@ -74,7 +77,7 @@ function highlightCode(code, lang, themeName) {
     
     while (i < line.length) {
       // Line comment (// or #)
-      if ((line[i] === '/' && line[i+1] === '/') || (line[i] === '#' && (i === 0 || line[i-1] === ' ' || line[i-1] === '\t'))) {
+      if ((line[i] === '/' && line[i+1] === '/' && (i === 0 || line[i-1] !== ':')) || (line[i] === '#' && (i === 0 || line[i-1] === ' ' || line[i-1] === '\t'))) {
         const rest = escapeHTML(line.slice(i));
         result += `<span style="color:${colors.comment};font-style:italic">${rest}</span>`;
         i = line.length;
