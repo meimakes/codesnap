@@ -1,15 +1,15 @@
 {
   "name": "codesnap",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Pretty code screenshots from your terminal",
+  "main": "codesnap.mjs",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test.mjs"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
+  "keywords": ["codesnap", "screenshots", "catppuccin", "code"],
+  "author": "Mei Park <hey@meimakes.com>",
+  "license": "MIT",
   "dependencies": {
     "playwright": "^1.58.2"
   }

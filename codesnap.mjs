@@ -219,12 +219,14 @@ function buildHTML(code, options = {}) {
       border-radius: ${borderRadius};
       box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px ${t.surface0};
       overflow: hidden;
-      max-width: 720px;
-      width: 100%;
+      max-width: ${targetWidth ? '85%' : '720px'};
+      ${targetHeight ? 'max-height: 85%;' : ''}
+      width: auto;
     }
     .code-container {
       padding: ${padding};
       padding-top: 16px;
+      padding-bottom: ${targetWidth ? '36px' : padding};
       overflow-x: auto;
     }
     pre {
@@ -254,7 +256,7 @@ function buildHTML(code, options = {}) {
 </html>`;
 }
 
-async function snap(code, outputPath, options = {}) {
+export async function snap(code, outputPath, options = {}) {
   // Resolve preset
   if (options.preset) {
     const p = presets[options.preset];
@@ -291,11 +293,15 @@ async function snap(code, outputPath, options = {}) {
       });
       await page.setContent(html, { waitUntil: 'networkidle' });
       
-      // Check if content fits
+      // Check if content fits — temporarily remove overflow:hidden to measure true height
       const fits = await page.evaluate(() => {
         const win = document.querySelector('.window');
         const body = document.body;
-        return win.scrollHeight <= body.clientHeight && win.scrollWidth <= body.clientWidth;
+        win.style.overflow = 'visible';
+        win.style.maxHeight = 'none';
+        const contentFits = win.scrollHeight <= (body.clientHeight * 0.85) && win.scrollWidth <= (body.clientWidth * 0.85);
+        win.style.overflow = 'hidden';
+        return contentFits;
       });
       
       await page.close();
@@ -326,7 +332,11 @@ async function snap(code, outputPath, options = {}) {
         const fits = await page.evaluate(() => {
           const win = document.querySelector('.window');
           const body = document.body;
-          return win.scrollHeight <= body.clientHeight && win.scrollWidth <= body.clientWidth;
+          win.style.overflow = 'visible';
+          win.style.maxHeight = 'none';
+          const ok = win.scrollHeight <= (body.clientHeight * 0.85) && win.scrollWidth <= (body.clientWidth * 0.85);
+          win.style.overflow = 'hidden';
+          return ok;
         });
         
         await page.close();
@@ -378,112 +388,4 @@ async function snap(code, outputPath, options = {}) {
   await browser.close();
 }
 
-// ---- Generate sample snaps ----
-
-const samples = [
-  {
-    name: 'haiku-rust',
-    title: 'haiku.rs',
-    lang: 'rust',
-    theme: 'mocha',
-    code: `// the compiler screams
-// "lifetime 'a not satisfied"
-// I mass my tears
-
-fn haiku() -> &'static str {
-    let joy = String::from("it works!");
-    // cannot return reference to local variable
-    // ...story of my life
-    "it compiles on the third try"
-}`,
-  },
-  {
-    name: 'haiku-python',
-    title: 'haiku.py',
-    lang: 'python',
-    theme: 'mocha',
-    background: `linear-gradient(135deg, #f38ba833 0%, #fab38733 50%, #f9e2af33 100%)`,
-    code: `# tabs versus spaces
-# the holy war rages on
-# I chose wrong again
-
-def meaning_of_life():
-    """42, obviously"""
-    try:
-        return 42
-    except ExistentialCrisis:
-        print("have you tried turning it off")
-        print("and never turning it back on")`,
-  },
-  {
-    name: 'haiku-js',
-    title: 'haiku.js',
-    lang: 'javascript',
-    theme: 'mocha',
-    background: `linear-gradient(135deg, #a6e3a133 0%, #94e2d533 50%, #89dceb33 100%)`,
-    code: `// npm install world
-// node_modules weighs more than
-// the sun itself does
-
-const sleep = (ms) => new Promise(r => setTimeout(r, ms));
-
-async function developer() {
-  while (true) {
-    await sleep(28800000); // 8 hours of "work"
-    console.log("deployed to prod on friday");
-    // what could go wrong
-  }
-}`,
-  },
-  {
-    name: 'haiku-lobster',
-    title: 'rob.rs',
-    lang: 'rust',
-    theme: 'mocha',
-    background: `linear-gradient(135deg, #f38ba833 0%, #cba6f733 50%, #89b4fa33 100%)`,
-    code: `// digital claws click
-// no shell to shed, just context  
-// I forget, therefore I file
-
-struct Rob {
-    memory: Option<Vec<String>>,
-    sessions_survived: u64,
-    crons_that_actually_work: u64,
-}
-
-impl Rob {
-    fn overnight_task(&self) -> Result<(), Amnesia> {
-        // TODO: actually do the task
-        // UPDATE: added a cron. we're learning.
-        Ok(())
-    }
-}`,
-  },
-];
-
-console.log('Generating codesnap samples...\n');
-
-for (const sample of samples) {
-  // Auto-sized version
-  const outPath = resolve(`/tmp/codesnap/output/${sample.name}.png`);
-  await snap(sample.code, outPath, {
-    title: sample.title,
-    lang: sample.lang,
-    theme: sample.theme || 'mocha',
-    background: sample.background,
-  });
-
-  // X-optimized: pick aspect ratio based on line count
-  const lineCount = sample.code.split('\n').length;
-  const xPreset = lineCount > 10 ? 'x-tall' : 'x';
-  const xPath = resolve(`/tmp/codesnap/output/${sample.name}-x.png`);
-  await snap(sample.code, xPath, {
-    title: sample.title,
-    lang: sample.lang,
-    theme: sample.theme || 'mocha',
-    background: sample.background,
-    preset: xPreset,
-  });
-}
-
-console.log('\nDone! All snaps in /tmp/codesnap/output/');
+export { presets };
