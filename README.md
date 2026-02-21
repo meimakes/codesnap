@@ -1,5 +1,7 @@
 # codesnap
 
+Built by [@meimakes](https://x.com/meimakes)
+
 Generate pretty code screenshots from your terminal. Catppuccin Mocha and Latte themes, platform-optimized presets, auto font scaling.
 
 ## Why
